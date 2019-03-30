@@ -1,0 +1,701 @@
+% latest-raw-url: https://raw.githubusercontent.com/tueda/beamertheme-naive/master/beamerthemenaive.sty
+%
+% Copyright (c) 2019 Takahiro Ueda
+%
+% This file may be distributed and/or modified under the conditions of
+% the LaTeX Project Public License (LPPL), either version 1.3c of this
+% license or (at your option) any later version. The latest version of
+% this license is in:
+%
+%    http://www.latex-project.org/lppl.txt
+%
+\ProvidesPackage{beamerthemenaive}[2019/03/30 v0.1 naive beamer theme]
+
+\mode<presentation>
+
+\RequirePackage{anyfontsize}
+\RequirePackage{appendixnumberbeamer}
+\RequirePackage{bookmark}
+\RequirePackage{etoolbox}
+\RequirePackage{graphicx}
+\RequirePackage{ifluatex}
+\RequirePackage{ifpdf}
+\RequirePackage{ifthen}
+\RequirePackage{ifxetex}
+\RequirePackage{tikz}
+\RequirePackage{xcolor}
+
+%{{{ Options
+
+% Flag for dvipdfmx.
+\newboolean{naive@dvipdfmx}
+\setboolean{naive@dvipdfmx}{false}
+
+% Flag for Japanese slides.
+\newboolean{naive@japanese}
+\setboolean{naive@japanese}{false}
+
+% Flag for checking environment variables.
+\newboolean{naive@env}
+\setboolean{naive@env}{false}
+
+% Flag for the color theme.
+\newcommand{\naive@color}{none}
+
+% Flag for the font theme.
+\newcommand{\naive@font}{1}
+
+% Package options.
+%
+% Use dvipdfmx as the driver.
+\DeclareOption{dvipdfmx}{%
+  \setboolean{naive@dvipdfmx}{true}%
+}
+% Use settings for Japanese documents.
+\DeclareOption{japanese}{%
+  \setboolean{naive@japanese}{true}%
+}
+% Use environment variables as extra (dynamic) options.
+\DeclareOption{env}{%
+  \setboolean{naive@env}{true}%
+}
+% Do not change the color theme.
+\DeclareOption{nocolor}{%
+  \renewcommand{\naive@color}{nocolor}%
+}
+% Use the "light" color theme.
+\DeclareOption{light}{%
+  \renewcommand{\naive@color}{light}%
+}
+% Use the "dark" color theme.
+\DeclareOption{dark}{%
+  \renewcommand{\naive@color}{dark}%
+}
+% Do not change the font theme.
+\DeclareOption{nofont}{%
+  \let\naive@font\@empty
+}
+\ExecuteOptions{light}
+\ProcessOptions\relax
+
+%}}}
+%{{{ Patches
+
+\ifthenelse{\boolean{naive@env}}{%
+  \AtEndPreamble{%
+    % Handle the FRAME environment variable.
+    % If FRAME is not empty, then pass it to \includeonlyframes.
+    % Note that labels of frames are automatically generated in below.
+    \GetEnv{\GetEnv@FRAME}{FRAME}%
+    \ifx\GetEnv@FRAME\empty
+    \else
+      \expandafter\includeonlyframes\expandafter{\GetEnv@FRAME}%
+    \fi
+  }%
+}{}%
+
+% \naive@patchfail{command-name}
+\newcommand{\naive@patchfail}[1]{%
+  \PackageError{beamerthemenaive}{Failed to patch \protect#1}{Sorry!}%
+}
+
+% Override \maketitle.
+\renewcommand{\maketitle}{%
+  \ifbeamer@inframe
+    \titlepage
+  \else
+    \frame[plain,noframenumbering]{\titlepage}%
+  \fi
+}
+
+% Automatically put a "section page" for each section.
+\AtBeginSection{%
+  \ifbeamer@inframe
+    \sectionpage
+  \else
+    \frame[plain,c,noframenumbering]{%
+      \sectionpage
+    }%
+  \fi
+}
+
+% Fix \appendix.
+\renewcommand{\appendixname}{Backup}% removes a pdf warning
+\renewcommand{\appendixtotalframenumber}{0}% ensures 0, not empty as in old versions
+\newcommand{\footpagenumberingprefix}{}
+\apptocmd{\appendix}{%
+  \renewcommand{\footpagenumberingprefix}{Appendix - }%
+% Add a "section page" for the appendix.
+  \section{\appendixname}%
+}{}{\naive@patchfail{\appendix}}%
+\renewcommand\appendixorig{}% in appendixnumberbeamer
+
+% Put an unique default label (the frame number) to each frame.
+% In appendix, they are A1, A2 etc. Frames without numbering get some suffixes.
+% See https://tex.stackexchange.com/a/316015
+\newcounter{naive@noframenumbering}
+\patchcmd{\beamer@@@@frame}{%
+  \setkeys{beamerframe}{#2}%
+}{%
+  \setkeys{beamerframe}{#2}%
+  \edef\theframe{\number\numexpr\value{framenumber}+1}%
+  \ifnum\mainend>0%  from appendixnumberbeamer
+    \edef\theframe{A\theframe}%
+  \fi
+  \ifbeamer@noframenumbering
+    \edef\thelabel{\theframe.\arabic{naive@noframenumbering}}%
+    \stepcounter{naive@noframenumbering}%
+  \else
+    \edef\thelabel{\theframe}%
+    \setcounter{naive@noframenumbering}{0}%
+  \fi
+% \message{framelabel=(\thelabel)}% debug
+  \edef\@xargs{{beamerframe}{label=\thelabel}}%
+  \expandafter\setkeys\@xargs
+}{}{\naive@patchfail{\beamer@@@@frame}}%
+
+% Make PDF bookmarks.
+% See https://tex.stackexchange.com/a/66520
+\apptocmd{\titlepage}{%
+  \only<1>{\bookmark[page=\the\c@page,level=1]{\inserttitle}}%
+}{}{\naive@patchfail{\titlepage}}%
+\apptocmd{\beamer@@frametitle}{%
+  \if\relax\detokenize{#1}\relax
+  \else
+    \only<1>{\bookmark[page=\the\c@page,level=3]{#1}}%
+  \fi
+}{}{\naive@patchfail{\beamer@@frametitle}}%
+
+% "Rerun LaTeX" message when the number of slides is changed.
+\AtEndDocument{%
+  \ifnum\value{framenumber}=\inserttotalframenumber
+  \else
+    \@latex@warning@no@line{Total frame number changed.%
+      \MessageBreak Rerun to get the number correct}%
+  \fi
+}
+
+% See https://github.com/gdevenyi/phd_thesis/blob/master/presentation/fixpauseincludegraphics.sty
+\newcommand{\transparent@value}{100}
+\newcommand{\oldincludegraphics}{}
+\let\oldincludegraphics\includegraphics
+\renewcommand*{\includegraphics}[2][]{%
+  \begin{tikzpicture}%
+    {\node[opacity=\transparent@value/100] {\oldincludegraphics[#1]{#2}};}%
+  \end{tikzpicture}%
+}
+% override of the original beamer@mixin transparent
+\define@key{beamer@mixin}{transparent}[15]{%
+    \def\beamer@uncoverbeforeactions{\ignorespaces\opaquenessCustom{#1}}%
+    \def\beamer@uncoverafteractions{\ignorespaces\opaquenessCustom{#1}}%
+}
+% mostly a copy-and-paste of the original code from beamerbaseoverlay.sty
+\newcommand{\opaquenessCustom}[1]{%
+  \only<1->{%
+    \beamer@actions{%
+      \gdef\transparent@value{#1}% here we change the custom transparency according to the pauses
+      \expandafter\xdef\csname beamer@oldcolorhook%
+      \the\beamer@coveringdepth\endcsname{\beamer@colorhook}%
+      \expandafter\xdef\csname beamer@oldpgfextension%
+      \the\beamer@coveringdepth\endcsname{\beamer@pgfextension}%
+      {\globalcolorstrue\colorlet{beamer@freeze\the\beamer@coveringdepth}{bg}}%
+      \xdef\beamer@colorhook{!#1!beamer@freeze%
+        \the\beamer@coveringdepth\beamer@colorhook}%
+      \gdef\beamer@pgfextension{!#1opaque}%
+      \color{.}%
+    }%
+    {%
+      \gdef\transparent@value{100}% here we initialize our custom transparency
+      \xdef\beamer@colorhook{\csname beamer@oldcolorhook%
+      \the\beamer@coveringdepth\endcsname}%
+      \xdef\beamer@pgfextension{\csname beamer@oldpgfextension%
+      \the\beamer@coveringdepth\endcsname}%
+      \color{.}%
+    }%
+  }%
+}%
+
+% For dvipdfmx.
+\ifthenelse{\boolean{naive@dvipdfmx}}{%
+  \RequirePackage{bxdpx-beamer}%
+}{}
+
+% For Japanese slides.
+\ifthenelse{\boolean{naive@japanese}}{%
+  \newboolean{naive@ptex}%
+  \@ifundefined{dtou}{%
+    \setboolean{naive@ptex}{false}%
+  }{%
+    \setboolean{naive@ptex}{true}%
+  }%
+
+  \newboolean{naive@uptex}%
+  \@ifundefined{ucs}{%
+    \setboolean{naive@uptex}{false}%
+  }{%
+    \setboolean{naive@uptex}{true}%
+  }%
+
+  \ifthenelse{\boolean{luatex}}{%
+    % LuaLaTeX + LuaTeX-ja
+    \RequirePackage{luatexja}%
+  }{%
+    \ifthenelse{\boolean{xetex}}{%
+      % XeLaTeX + zxjatype
+      \RequirePackage{zxjatype}%
+    }{%
+      \ifthenelse{\boolean{pdf}}{%
+        \ifthenelse{\boolean{naive@ptex}}{%
+        }{%
+          % pdfLaTeX + bxcjkjatype
+          \RequirePackage[whole,autotilde]{bxcjkjatype}%
+        }%
+      }{%
+        \ifthenelse{\boolean{naive@ptex}}{%
+          \ifthenelse{\boolean{naive@dvipdfmx}}{%
+            % (u)pLaTeX + dvipdfmx
+            \RequirePackage{pxjahyper}%
+          }{%
+          }%
+        }{%
+        }%
+      }%
+    }%
+  }%
+}{}
+
+%}}}
+%{{{ New commands
+
+% \GetEnv{ctl-seq}{env-var-name} gets an environment variable.
+% https://tex.stackexchange.com/a/62032
+\ifthenelse{\boolean{xetex}}{%
+  % NOTE: -shell-escape is necessary.
+  \RequirePackage{catchfile}
+  \newcommand\GetEnv[2]{%
+    \immediate\write18{kpsewhich --var-value #2 > \jobname.tmp}%
+    \CatchFileDef{\GetEnv@temp}{\jobname.tmp}{\endlinechar=-1}%
+    \if\relax\detokenize{#1}\relax\GetEnv@temp\else\let#1\@GetEnv@temp\fi}
+}{\ifthenelse{\boolean{luatex}}{%
+  % Old LuaTeX may cause a problem due to \luaescapestring vs.
+  % \luatexluaescapestring.
+  \newcommand\GetEnv[2]{%
+    \edef\GetEnv@temp{\directlua{tex.sprint(
+      kpse.var_value("\luaescapestring{#2}") or "" ) }}%
+    \if\relax\detokenize{#1}\relax\GetEnv@temp\else\let#1\GetEnv@temp\fi}
+}{
+  \RequirePackage{catchfile}
+  \newcommand{\GetEnv}[2]{%
+    \CatchFileEdef{\GetEnv@temp}{"|kpsewhich --var-value #2"}{\endlinechar=-1}%
+    \if\relax\detokenize{#1}\relax\GetEnv@temp\else\let#1\GetEnv@temp\fi}
+}}
+
+%}}}
+%{{{ Color
+
+% cf. https://material.io/tools/color
+
+\definecolor{NaiveBlue}  {HTML}{1976D2}% Blue 700
+\definecolor{NaiveCyan}  {HTML}{00BCD4}% Cyan 500
+\definecolor{NaiveGreen} {HTML}{00695C}% Green 800
+\definecolor{NaiveRed}   {HTML}{FF5252}% Red A200
+\definecolor{NaiveYellow}{HTML}{F9A825}% Yellow 800
+
+\definecolor{NaiveLightBlue}  {HTML}{E3F2FD}% Blue 50
+\definecolor{NaiveLightLime}  {HTML}{F9FBE7}% Lime 50
+\definecolor{NaiveLightOrange}{HTML}{FFF3E0}% Orange 50
+
+\definecolor{NaiveDarkBrown} {HTML}{3E2723}% Brown 900
+\definecolor{NaiveDarkIndigo}{HTML}{1A237E}% Indigo 900
+\definecolor{NaiveDarkTeal}  {HTML}{004D40}% Teal 900
+
+\def\naive@knownaccents{%
+  NaiveBlue,%
+  NaiveCyan,%
+  NaiveGreen,%
+  NaiveRed,%
+  NaiveYellow%
+}
+
+\def\@tempa{white}
+\@for\@tempb:=\naive@knownaccents\do{%
+  \edef\@tempa{\@tempa,\@tempb,\@tempb!75!white}%
+}
+\let\naive@knownaccents\@tempa
+
+% \ColorDistanceSq{<color1>}{<color2>}{<result-cmd>} gives the color distance
+% between two colors.
+\newcommand{\ColorDistanceSq}[3]{%
+  \extractcolorspec{#1}{\@tempa}%
+  \expandafter\convertcolorspec\@tempa{rgb}{\@tempa}%
+  \extractcolorspec{#2}{\@tempb}%
+  \expandafter\convertcolorspec\@tempb{rgb}{\@tempb}%
+  \edef\@tempa{\@tempa,\@tempb}%
+  \expandafter\@ColorDistanceSq\@tempa,{#3}%
+}
+\newcommand{\@ColorDistanceSq}{}
+\def\@ColorDistanceSq#1,#2,#3,#4,#5,#6,#7{%
+  % I found this "approximation" in Wikipedia...
+  % 0.0 <= d^2 <= 9.0.
+  \pgfmathsetmacro{\@tempa}{(#1+#4)/2}%
+  \pgfmathsetmacro{#7}{(2+\@tempa)*(#1-#4)^2+4*(#2-#5)^2+(3-\@tempa)*(#3-#6)^2}%
+}
+
+% \FarthestColor{<candidate-list>}{<fg-list>}{<bg-list>}{<bg-factor>}{<result-cmd>}
+% finds a color that are farthest from the given foreground and background
+% colors. Background colors get a weight (0 < w <= 1) for the distance.
+\newcommand{\FarthestColor}[5]{%
+  \let\@tempc\relax
+  \edef\@tempd{-1}%
+  \@for\@tempe:=#1\do{%
+    \ifx\@tempe\@empty
+    \else
+      \edef\@tempg{10}%
+      \@for\@tempf:=#2\do{%
+        \ifx\@tempf\@empty
+        \else
+          \ifdim\@tempg\p@>\@tempd\p@
+            \ColorDistanceSq{\@tempe}{\@tempf}{\@temph}%
+            \pgfmathsetmacro{\@tempg}{min(\@tempg,\@temph)}%
+          \fi
+        \fi
+      }%
+      \@for\@tempf:=#3\do{%
+        \ifx\@tempf\@empty
+        \else
+          \ifdim\@tempg\p@>\@tempd\p@
+            \ColorDistanceSq{\@tempe}{\@tempf}{\@temph}%
+            \pgfmathsetmacro{\@tempg}{min(\@tempg,#4*\@temph)}%
+          \fi
+        \fi
+      }%
+      \ifdim\@tempg\p@>\@tempd\p@
+        \let\@tempc\@tempe
+        \let\@tempd\@tempg
+      \fi
+    \fi
+  }%
+  \let#5\@tempc
+}
+
+\newcommand{\naive@bgfactor}{0.25}
+
+\newcommand{\UpdateNormalColor}{%
+  % from beamerbasecolor.sty
+  \usebeamercolor*{alerted text}
+  \usebeamercolor*{example text}
+  \usebeamercolor*{structure}
+  \usebeamercolor{normal text}
+  \color{fg}
+  \def\normalcolor{\color{normal text.fg}}
+}%
+
+% \ChangeColorScheme{<options>} changes the color scheme for the color theme.
+\pgfkeys{
+  /naive/color/scheme/.cd,
+  fg/.code={%
+    \edef\naive@colorscheme@fg{#1}%
+  },
+  bg/.code={%
+    \edef\naive@colorscheme@bg{#1}%
+  },
+  accent/.code={%
+    \edef\naive@colorscheme@accent{#1}%
+  },
+  structure/.code={%
+    \edef\naive@colorscheme@structure{#1}%
+  },
+  alert/.code={%
+    \edef\naive@colorscheme@alert{#1}%
+  },
+  example/.code={%
+    \edef\naive@colorscheme@example{#1}%
+  },
+  shading/.is choice,
+  shading/none/.code={%
+    \edef\naive@colorscheme@shading{}%
+  },
+  shading/vertical/.code={%
+    \edef\naive@colorscheme@shading{vertical}%
+  },
+  top/.code={%
+    \edef\naive@colorscheme@top{#1}%
+  },
+  bottom/.code={%
+    \edef\naive@colorscheme@bottom{#1}%
+  },
+  middle/.code={%
+    \edef\naive@colorscheme@middle{#1}%
+  },
+  midpoint/.code={%
+    \edef\naive@colorscheme@midpoint{#1}%
+  },
+}
+\newcommand{\ChangeColorScheme}[1]{%
+  \pgfkeys{
+    /naive/color/scheme/.cd,
+    fg=black,
+    bg=white,
+    accent=,
+    structure=,
+    alert=,
+    example=,
+    shading=none,
+    top=,
+    bottom=,
+    middle=,
+    midpoint=0.5,
+    #1
+  }%
+
+  % If the accent color is not specified, then use the foreground color for it.
+  \ifx\naive@colorscheme@accent\@empty
+    \let\naive@colorscheme@accent\naive@colorscheme@fg
+  \fi
+
+  % Foreground and background.
+
+  \colorlet{NaiveForeground}{\naive@colorscheme@fg}%
+  \colorlet{NaiveBackground}{\naive@colorscheme@bg}%
+  \colorlet{NaiveAccent}{\naive@colorscheme@accent}%
+
+  \edef\naive@colorscheme@fglist{NaiveForeground,NaiveAccent}%
+
+  \ifx\naive@colorscheme@shading\@empty
+    \edef\naive@colorscheme@bglist{NaiveBackground}%
+
+    \ColorDistanceSq{NaiveBackground}{white}{\@tempa}%
+    \ifdim\@tempa\p@>\z@%
+      \setbeamercolor{normal text}{fg=NaiveForeground,bg=NaiveBackground}
+    \else
+      \setbeamercolor{normal text}{fg=NaiveForeground,bg=}
+    \fi
+    \setbeamertemplate{background canvas}[default]
+  \else
+    \edef\naive@colorscheme@bglist{}%
+
+    \setbeamercolor{normal text}{fg=NaiveForeground,bg=}
+
+    \ifthenelse{\equal{\naive@colorscheme@shading}{vertical}}{%
+      \ifx\naive@colorscheme@top\@empty
+        \let\naive@colorscheme@top\naive@colorscheme@bg
+      \fi
+      \ifx\naive@colorscheme@bottom\@empty
+        \let\naive@colorscheme@bottom\naive@colorscheme@bg
+      \fi
+
+      \ifx\naive@colorscheme@middle\@empty
+        \edef\naive@colorscheme@bglist{\naive@colorscheme@bglist,%
+          \naive@colorscheme@top,%
+          \naive@colorscheme@top!50!\naive@colorscheme@bottom,%
+          \naive@colorscheme@bottom}%
+
+        \setbeamertemplate{background canvas}[vertical shading][
+          top=\naive@colorscheme@top,
+          bottom=\naive@colorscheme@bottom,
+          midpoint=\naive@colorscheme@midpoint,
+        ]%
+      \else
+        \edef\naive@colorscheme@bglist{\naive@colorscheme@bglist,%
+          \naive@colorscheme@top,%
+          \naive@colorscheme@top!50!\naive@colorscheme@middle,%
+          \naive@colorscheme@middle,%
+          \naive@colorscheme@middle!50!\naive@colorscheme@bottom,%
+          \naive@colorscheme@bottom}%
+
+        \setbeamertemplate{background canvas}[vertical shading][
+          top=\naive@colorscheme@top,
+          middle=\naive@colorscheme@middle,
+          bottom=\naive@colorscheme@bottom,
+          midpoint=\naive@colorscheme@midpoint,
+        ]%
+      \fi
+    }{}%
+  \fi
+
+  \ifx\naive@colorscheme@structure\@empty
+  \else
+    \edef\naive@colorscheme@fglist{\naive@colorscheme@fglist,\naive@colorscheme@structure}%
+  \fi
+
+  \ifx\naive@colorscheme@alert\@empty
+  \else
+    \edef\naive@colorscheme@fglist{\naive@colorscheme@fglist,\naive@colorscheme@alert}%
+  \fi
+
+  \ifx\naive@colorscheme@example\@empty
+  \else
+    \edef\naive@colorscheme@fglist{\naive@colorscheme@fglist,\naive@colorscheme@example}%
+  \fi
+
+  % If the structure color is not specified, then use the accent color for it.
+  \ifx\naive@colorscheme@structure\@empty
+    \colorlet{NaiveStructure}{NaiveAccent}%
+  \else
+    \colorlet{NaiveStructure}{\naive@colorscheme@structure}%
+  \fi
+
+  % Choose the title color. Preference is given for brighter colors (not black).
+  \FarthestColor{NaiveAccent,NaiveStructure,NaiveForeground}{\naive@colorscheme@bglist}{black}{\naive@bgfactor}{\@tempa}
+  \colorlet{NaiveTitle}{\@tempa}%
+
+  % If the alert color is not specified, then choose a color from our list.
+  % Preference is given for brighter colors (not black) and reddish colors
+  % (not lime).
+  \ifx\naive@colorscheme@alert\@empty
+    \FarthestColor{\naive@knownaccents}{\naive@colorscheme@fglist}{\naive@colorscheme@bglist}{\naive@bgfactor}{\naive@colora}%
+    \FarthestColor{\naive@knownaccents}{\naive@colorscheme@fglist,\naive@colora}{\naive@colorscheme@bglist}{\naive@bgfactor}{\naive@colorb}%
+    \FarthestColor{\naive@colora,\naive@colorb}{lime}{black}{\@tempa}
+    \colorlet{NaiveAlert}{\@tempa}%
+    \edef\naive@colorscheme@fglist{\naive@colorscheme@fglist,\@tempa}%
+  \else
+    \colorlet{NaiveAlert}{\naive@colorscheme@alert}%
+  \fi
+
+  % If the example color is not specified, then choose a color from our list.
+  \ifx\naive@colorscheme@example\@empty
+    \FarthestColor{\naive@knownaccents}{\naive@colorscheme@fglist}{\naive@colorscheme@bglist}{\naive@bgfactor}{\@tempa}%
+    \colorlet{NaiveExample}{\@tempa}%
+    \edef\naive@colorscheme@fglist{\naive@colorscheme@fglist,\@tempa}%
+  \else
+    \colorlet{NaiveExample}{\naive@colorscheme@example}%
+  \fi
+
+  \setbeamercolor{structure}{fg=NaiveStructure}
+  \setbeamercolor{alerted text}{fg=NaiveAlert}
+  \setbeamercolor{example text}{fg=NaiveExample}
+  \setbeamercolor{titlelike}{parent=structure,fg=NaiveTitle}
+  \setbeamercolor{item}{parent=local structure,fg=NaiveTitle}
+
+  % Need to update the current color when not in the preamble.
+  \ifx\@onlypreamble\@notprerr
+    \UpdateNormalColor
+  \fi
+}
+
+% \ChangeColorTheme{<name>} changes the coloring to the given preset.
+\newcommand{\ChangeColorTheme}[1]{%
+  \@nameuse{naive@color@init@#1}%
+}
+\newcommand{\naive@color@init@nocolor}{%
+}
+\newcommand{\naive@color@init@light}{%
+  \ChangeColorScheme{%
+    fg=NaiveDarkTeal!75!black,
+    bg=white,
+    accent=NaiveBlue,
+    alert=NaiveRed,
+  }%
+}
+\newcommand{\naive@color@init@dark}{%
+  \colorlet{shading top}{black}%
+  \definecolor{shading middle}{rgb}{0.14,0.14,0.20}%
+  \definecolor{shading bottom}{rgb}{0.39,0.39,0.45}%
+  \ChangeColorScheme{%
+    fg=white,
+    accent=NaiveBlue!75!white,
+    alert=NaiveRed!75!white,
+    shading=vertical,
+    top=shading top,
+    bottom=shading bottom,
+    middle=shading middle,
+  }%
+}
+
+\ChangeColorTheme{\naive@color}
+
+%}}}
+%{{{ Font
+
+\ifx\naive@font\@empty
+\else
+  \RequirePackage[T1]{fontenc}
+  %\RequirePackage[sfdefault]{FiraSans}
+  \RequirePackage[sfdefault]{roboto}
+  \beamer@suppressreplacementstrue
+  \RequirePackage{fouriernc}
+
+  \ifthenelse{\boolean{naive@japanese}}{%
+    \ifthenelse{\boolean{luatex}}{%
+      % LuaLaTeX
+      \RequirePackage[ipaex]{luatexja-preset}%
+      \renewcommand{\kanjifamilydefault}{\gtdefault}%
+    }{%
+      \ifthenelse{\boolean{xetex}}{%
+        % XeLaTeX
+        \RequirePackage[ipaex]{zxjafont}%
+      }{%
+        \ifthenelse{\boolean{naive@ptex}}{%
+          \ifthenelse{\boolean{naive@uptex}}{%
+          }{%
+            % pLaTeX
+            \usepackage{minijs}%
+          }%
+          % (u)pLaTeX
+          \renewcommand{\kanjifamilydefault}{\gtdefault}%
+        }{%
+        }%
+      }%
+    }%
+  }{}
+
+  \setbeamerfont{title}{family=\robotocondensed,series=\bfseries,size=\LARGE}
+  \setbeamerfont{date}{size=\scriptsize}
+  \setbeamerfont{frametitle}{family=\robotocondensed,series=\bfseries,size=\Large}
+\fi
+
+%}}}
+%{{{ Outer
+
+\setbeamertemplate{frametitle}[default][center]
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{%
+  \hfill
+  \footpagenumberingprefix\insertframenumber/\inserttotalframenumber
+  \hspace{7pt}%
+  \vspace{7pt}%
+}
+
+% Space between the title and text.
+\addtobeamertemplate{frametitle}{}{\vspace*{1ex plus 1ex minus 0.5ex}}
+
+%}}}
+%{{{ Inner
+
+% Space between paragraphs.
+\setlength{\parskip}{3ex plus 2ex minus 2ex}% default: 0pt
+
+% Use the default \parskip in the title page.
+\pretocmd{\titlepage}{%
+  \setlength{\parskip}{0pt}%
+}{}{\naive@patchfail{\titlepage}}%
+
+% Space between items.
+\apptocmd{\@listi}{%
+  \setlength{\itemsep}{\parskip}%
+}{}{\naive@patchfail{\@listi}}%
+\apptocmd{\@listii}{%
+  \setlength{\topsep}{2ex plus 0.5ex minus 0.5ex}%
+  \setlength{\itemsep}{2ex plus 1ex minus 1ex}%
+}{}{\naive@patchfail{\@listii}}%
+\let\@listI\@listi
+
+% Bigger bullet size for itemize.
+\newcommand{\mybullet}{\LARGE\raise-0.3ex\hbox{\textbullet}}
+\defbeamertemplate{itemize item}{mybullet}{\mybullet}
+\setbeamertemplate{itemize item}[mybullet]
+
+% "section page" template.
+\defbeamertemplate{section page}{naive}[1][]{%
+  \begingroup
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center,#1]{section title}%
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}%
+  \endgroup
+}
+\setbeamertemplate{section page}[naive]
+
+%}}}
+
+\mode<all>
