@@ -536,7 +536,7 @@
   \fi
 
   % Choose the title color. Preference is given for brighter colors (not black).
-  \FarthestColor{NaiveAccent,NaiveStructure,NaiveForeground}{\naive@colorscheme@bglist}{black}{\naive@bgfactor}{\@tempa}
+  \FarthestColor{NaiveAccent,NaiveStructure,NaiveForeground}{\naive@colorscheme@bglist}{black}{\naive@bgfactor}{\@tempa}%
   \colorlet{NaiveTitle}{\@tempa}%
 
   % If the alert color is not specified, then choose a color from our list.
@@ -545,7 +545,7 @@
   \ifx\naive@colorscheme@alert\@empty
     \FarthestColor{\naive@knownaccents}{\naive@colorscheme@fglist}{\naive@colorscheme@bglist}{\naive@bgfactor}{\naive@colora}%
     \FarthestColor{\naive@knownaccents}{\naive@colorscheme@fglist,\naive@colora}{\naive@colorscheme@bglist}{\naive@bgfactor}{\naive@colorb}%
-    \FarthestColor{\naive@colora,\naive@colorb}{lime}{black}{\@tempa}
+    \FarthestColor{\naive@colora,\naive@colorb}{lime}{black}{\naive@bgfactor}{\@tempa}%
     \colorlet{NaiveAlert}{\@tempa}%
     \edef\naive@colorscheme@fglist{\naive@colorscheme@fglist,\@tempa}%
   \else
@@ -561,11 +561,11 @@
     \colorlet{NaiveExample}{\naive@colorscheme@example}%
   \fi
 
-  \setbeamercolor{structure}{fg=NaiveStructure}
-  \setbeamercolor{alerted text}{fg=NaiveAlert}
-  \setbeamercolor{example text}{fg=NaiveExample}
-  \setbeamercolor{titlelike}{parent=structure,fg=NaiveTitle}
-  \setbeamercolor{item}{parent=local structure,fg=NaiveTitle}
+  \setbeamercolor{structure}{fg=NaiveStructure}%
+  \setbeamercolor{alerted text}{fg=NaiveAlert}%
+  \setbeamercolor{example text}{fg=NaiveExample}%
+  \setbeamercolor{titlelike}{parent=structure,fg=NaiveTitle}%
+  \setbeamercolor{item}{parent=local structure,fg=NaiveTitle}%
 
   % Need to update the current color when not in the preamble.
   \ifx\@onlypreamble\@notprerr
