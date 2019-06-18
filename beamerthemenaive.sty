@@ -9,7 +9,7 @@
 %
 %    http://www.latex-project.org/lppl.txt
 %
-\ProvidesPackage{beamerthemenaive}[2019/03/30 v0.1 naive beamer theme]
+\ProvidesPackage{beamerthemenaive}[2019/06/18 v0.1a naive beamer theme]
 
 \mode<presentation>
 
@@ -40,7 +40,7 @@
 \setboolean{naive@env}{false}
 
 % Flag for the color theme.
-\newcommand{\naive@color}{none}
+\newcommand{\naive@colortheme}{none}
 
 % Flag for the font theme.
 \newcommand{\naive@font}{1}
@@ -61,15 +61,15 @@
 }
 % Do not change the color theme.
 \DeclareOption{nocolor}{%
-  \renewcommand{\naive@color}{nocolor}%
+  \renewcommand{\naive@colortheme}{nocolor}%
 }
 % Use the "light" color theme.
 \DeclareOption{light}{%
-  \renewcommand{\naive@color}{light}%
+  \renewcommand{\naive@colortheme}{light}%
 }
 % Use the "dark" color theme.
 \DeclareOption{dark}{%
-  \renewcommand{\naive@color}{dark}%
+  \renewcommand{\naive@colortheme}{dark}%
 }
 % Do not change the font theme.
 \DeclareOption{nofont}{%
@@ -575,11 +575,11 @@
 
 % \ChangeColorTheme{<name>} changes the coloring to the given preset.
 \newcommand{\ChangeColorTheme}[1]{%
-  \@nameuse{naive@color@init@#1}%
+  \@nameuse{naive@colortheme@init@#1}%
 }
-\newcommand{\naive@color@init@nocolor}{%
+\newcommand{\naive@colortheme@init@nocolor}{%
 }
-\newcommand{\naive@color@init@light}{%
+\newcommand{\naive@colortheme@init@light}{%
   \ChangeColorScheme{%
     fg=NaiveDarkTeal!75!black,
     bg=white,
@@ -587,7 +587,7 @@
     alert=NaiveRed,
   }%
 }
-\newcommand{\naive@color@init@dark}{%
+\newcommand{\naive@colortheme@init@dark}{%
   \colorlet{shading top}{black}%
   \definecolor{shading middle}{rgb}{0.14,0.14,0.20}%
   \definecolor{shading bottom}{rgb}{0.39,0.39,0.45}%
@@ -602,7 +602,7 @@
   }%
 }
 
-\ChangeColorTheme{\naive@color}
+\ChangeColorTheme{\naive@colortheme}
 
 %}}}
 %{{{ Font
