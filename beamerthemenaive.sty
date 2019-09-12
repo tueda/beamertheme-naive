@@ -9,7 +9,7 @@
 %
 %    http://www.latex-project.org/lppl.txt
 %
-\ProvidesPackage{beamerthemenaive}[2019/06/18 v0.1a naive beamer theme]
+\ProvidesPackage{beamerthemenaive}[2019/09/12 v0.1b naive beamer theme]
 
 \mode<presentation>
 
@@ -180,6 +180,9 @@
 \newcommand{\oldincludegraphics}{}
 \let\oldincludegraphics\includegraphics
 \renewcommand*{\includegraphics}[2][]{%
+  \ifcsname tikz@library@external@loaded\endcsname
+    \tikzset{external/export next=false}%
+  \fi
   \begin{tikzpicture}%
     {\node[opacity=\transparent@value/100] {\oldincludegraphics[#1]{#2}};}%
   \end{tikzpicture}%
