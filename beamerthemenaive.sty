@@ -1,6 +1,6 @@
 % latest-raw-url: https://raw.githubusercontent.com/tueda/beamertheme-naive/master/beamerthemenaive.sty
 %
-% Copyright (c) 2019 Takahiro Ueda
+% Copyright (c) 2019-2020 Takahiro Ueda
 %
 % This file may be distributed and/or modified under the conditions of
 % the LaTeX Project Public License (LPPL), either version 1.3c of this
@@ -9,7 +9,7 @@
 %
 %    http://www.latex-project.org/lppl.txt
 %
-\ProvidesPackage{beamerthemenaive}[2019/09/12 v0.1b naive beamer theme]
+\ProvidesPackage{beamerthemenaive}[2020/02/14 v0.1c naive beamer theme]
 
 \mode<presentation>
 
@@ -613,10 +613,10 @@
 \ifx\naive@font\@empty
 \else
   \RequirePackage[T1]{fontenc}
-  %\RequirePackage[sfdefault]{FiraSans}
-  \RequirePackage[sfdefault]{roboto}
+  \RequirePackage{roboto}
   \beamer@suppressreplacementstrue
-  \RequirePackage{fouriernc}
+  \RequirePackage{fourier}
+  \RequirePackage[T1experimental]{sfmath}
 
   \ifthenelse{\boolean{naive@japanese}}{%
     \ifthenelse{\boolean{luatex}}{%
