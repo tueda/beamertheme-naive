@@ -1,6 +1,4 @@
-% latest-raw-url: https://raw.githubusercontent.com/tueda/beamertheme-naive/master/beamerthemenaive.sty
-%
-% Copyright (c) 2019 Takahiro Ueda
+% Copyright (c) 2019-2021 Takahiro Ueda
 %
 % This file may be distributed and/or modified under the conditions of
 % the LaTeX Project Public License (LPPL), either version 1.3c of this
@@ -9,7 +7,7 @@
 %
 %    http://www.latex-project.org/lppl.txt
 %
-\ProvidesPackage{beamerthemenaive}[2019/09/12 v0.1b naive beamer theme]
+\ProvidesPackage{beamerthemenaive}[2021/01/22 v0.1c naive beamer theme]
 
 \mode<presentation>
 
@@ -618,11 +616,14 @@
   \beamer@suppressreplacementstrue
   \RequirePackage{fouriernc}
 
+  \newcommand{\titlefont}{\robotocondensed}
+
   \ifthenelse{\boolean{naive@japanese}}{%
     \ifthenelse{\boolean{luatex}}{%
       % LuaLaTeX
       \RequirePackage[ipaex]{luatexja-preset}%
       \renewcommand{\kanjifamilydefault}{\gtdefault}%
+      \renewcommand{\titlefont}{\robotocondensed\gtfamily}%
     }{%
       \ifthenelse{\boolean{xetex}}{%
         % XeLaTeX
@@ -636,15 +637,16 @@
           }%
           % (u)pLaTeX
           \renewcommand{\kanjifamilydefault}{\gtdefault}%
+          \renewcommand{\titlefont}{\robotocondensed\gtfamily}%
         }{%
         }%
       }%
     }%
   }{}
 
-  \setbeamerfont{title}{family=\robotocondensed,series=\bfseries,size=\LARGE}
+  \setbeamerfont{title}{family=\titlefont,series=\bfseries,size=\LARGE}
   \setbeamerfont{date}{size=\scriptsize}
-  \setbeamerfont{frametitle}{family=\robotocondensed,series=\bfseries,size=\Large}
+  \setbeamerfont{frametitle}{family=\titlefont,series=\bfseries,size=\Large}
 \fi
 
 %}}}
@@ -702,3 +704,4 @@
 %}}}
 
 \mode<all>
+% latest-raw-url: https://raw.githubusercontent.com/tueda/beamertheme-naive/master/beamerthemenaive.sty
