@@ -7,7 +7,7 @@
 %
 %    http://www.latex-project.org/lppl.txt
 %
-\ProvidesPackage{beamerthemenaive}[2021/01/22 v0.1c naive beamer theme]
+\ProvidesPackage{beamerthemenaive}[2021/01/24 v0.1d naive beamer theme]
 
 \mode<presentation>
 
@@ -684,6 +684,12 @@
   \setlength{\itemsep}{2ex plus 1ex minus 1ex}%
 }{}{\naive@patchfail{\@listii}}%
 \let\@listI\@listi
+
+% Space before/after verbatim.
+\preto{\@verbatim}{%
+  \setlength{\partopsep}{\topsep}%
+  \setlength{\topsep}{-0.5ex plus 0.5ex minus 0ex}%
+}
 
 % Bigger bullet size for itemize.
 \newcommand{\mybullet}{\LARGE\raise-0.3ex\hbox{\textbullet}}
