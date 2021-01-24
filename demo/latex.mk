@@ -1,1 +1,3 @@
+BUILDDIR = .build
+
 export TEXINPUTS = .;..;
