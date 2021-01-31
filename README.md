@@ -1,5 +1,4 @@
-Naiive
-======
+# [Naiive](https://www.urbandictionary.com/define.php?term=naiive)
 
 Yet another simple beamer theme.
 
