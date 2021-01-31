@@ -7,7 +7,7 @@
 %
 %    http://www.latex-project.org/lppl.txt
 %
-\ProvidesPackage{beamerthemenaive}[2021/01/24 v0.1d naive beamer theme]
+\ProvidesPackage{beamerthemenaive}[2021/01/31 v0.1e naive beamer theme]
 
 \mode<presentation>
 
@@ -219,6 +219,22 @@
 % For dvipdfmx.
 \ifthenelse{\boolean{naive@dvipdfmx}}{%
   \RequirePackage{bxdpx-beamer}%
+  % Fix href + includegraphics in dvipdfmx
+  % We need some bounding box: https://ja.stackoverflow.com/a/69667
+  % cf. https://tex.stackexchange.com/a/85103
+  \newcommand{\@naive@old@href}{}%
+  \let\@naive@old@href\href
+  \newcommand{\@naive@old@includegraphics}{}%
+  \let\@naive@old@includegraphics\includegraphics
+  \newcommand{\@naive@new@includegraphics}[2][]{%
+    \bxqbd@enghost{\@naive@old@includegraphics[#1]{#2}}%
+  }%
+  \renewcommand{\href}[2]{%
+    {%
+      \let\includegraphics\@naive@new@includegraphics
+      \@naive@old@href{#1}{#2}%
+    }%
+  }%
 }{}
 
 % For Japanese slides.
