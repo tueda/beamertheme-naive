@@ -28,7 +28,23 @@
 \RequirePackage{tikz}
 \RequirePackage{xcolor}
 
-%{{{ Options
+%{{{ Flags
+
+% Flag for (u)p(La)TeX.
+\newboolean{naive@ptex}%
+\@ifundefined{dtou}{%
+  \setboolean{naive@ptex}{false}%
+}{%
+  \setboolean{naive@ptex}{true}%
+}%
+
+% Flag for up(La)TeX.
+\newboolean{naive@uptex}%
+\@ifundefined{ucs}{%
+  \setboolean{naive@uptex}{false}%
+}{%
+  \setboolean{naive@uptex}{true}%
+}%
 
 % Flag for dvipdfmx.
 \newboolean{naive@dvipdfmx}
@@ -37,19 +53,23 @@
 % Flag for Japanese slides.
 \newboolean{naive@japanese}
 \setboolean{naive@japanese}{false}
+\ifthenelse{\boolean{naive@ptex}}{%
+  \setboolean{naive@japanese}{true}%
+}%
 
 % Flag for checking environment variables.
 \newboolean{naive@env}
 \setboolean{naive@env}{false}
 
-% Flag for the color theme.
+% Name of the color theme to be used.
 \newcommand{\naive@colortheme}{none}
 
-% Flag for the font theme.
+% Flag for the font theme (non-empty of empty).
 \newcommand{\naive@font}{1}
 
-% Package options.
-%
+%}}}
+%{{{ Options
+
 % Use dvipdfmx as the driver.
 \DeclareOption{dvipdfmx}{%
   \setboolean{naive@dvipdfmx}{true}%
@@ -244,20 +264,6 @@
 
 % For Japanese slides.
 \ifthenelse{\boolean{naive@japanese}}{%
-  \newboolean{naive@ptex}%
-  \@ifundefined{dtou}{%
-    \setboolean{naive@ptex}{false}%
-  }{%
-    \setboolean{naive@ptex}{true}%
-  }%
-
-  \newboolean{naive@uptex}%
-  \@ifundefined{ucs}{%
-    \setboolean{naive@uptex}{false}%
-  }{%
-    \setboolean{naive@uptex}{true}%
-  }%
-
   \ifthenelse{\boolean{luatex}}{%
     % LuaLaTeX + LuaTeX-ja
     \RequirePackage{luatexja}%
