@@ -290,6 +290,11 @@
       }%
     }%
   }%
+  % Default date in Japanese.
+  \IfFileExists{bxwareki.sty}{%
+    \RequirePackage{bxwareki}%
+    \date{\warekisettoday\warekicustomdate{}}%
+  }{}%
 }{}
 
 %}}}
