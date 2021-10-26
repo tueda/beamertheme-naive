@@ -12,7 +12,7 @@
 %    https://github.com/tueda/beamertheme-naive
 %
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{beamerthemenaive}[2021/01/31 v0.1e naive beamer theme]
+\ProvidesPackage{beamerthemenaive}[2021/10/26 v0.1f naive beamer theme]
 
 \mode<presentation>
 
@@ -297,6 +297,33 @@
   }{}%
 }{}
 
+% pdflatex segfaults when a precompiled format file contains PGF shadings,
+% https://tex.stackexchange.com/q/609136.
+% For the use case of mylatexformat, postpone
+%   \setbeamertemplate{background canvas}[vertical shading][...]
+% until the beginning of the document.
+% One can also manually call \ApplyBackgroundShading after
+%   \csname endofdump\endcsname
+% of the idiom for mylatexformat.
+\def\naive@setbeamertemplate@backgroundcanvas@verticalshading[#1]{%
+  \edef\naive@current@verticalshading{#1}%
+}
+\def\naive@setbeamertemplate@backgroundcanvas@verticalshading@clear{%
+  \let\naive@current@verticalshading\@empty
+}
+\newcommand{\ApplyBackgroundShading}{%
+  \ifx\naive@current@verticalshading\@empty
+  \else
+    \edef\@tempa{%
+      {background canvas}[vertical shading][\naive@current@verticalshading]%
+    }%
+    \expandafter\setbeamertemplate\@tempa
+    \naive@setbeamertemplate@backgroundcanvas@verticalshading@clear
+  \fi
+}
+\naive@setbeamertemplate@backgroundcanvas@verticalshading@clear
+\AtBeginDocument{\ApplyBackgroundShading}
+
 %}}}
 %{{{ New commands
 
@@ -504,6 +531,7 @@
       \setbeamercolor{normal text}{fg=NaiveForeground,bg=}
     \fi
     \setbeamertemplate{background canvas}[default]
+    \naive@setbeamertemplate@backgroundcanvas@verticalshading@clear
   \else
     \edef\naive@colorscheme@bglist{}%
 
@@ -523,7 +551,7 @@
           \naive@colorscheme@top!50!\naive@colorscheme@bottom,%
           \naive@colorscheme@bottom}%
 
-        \setbeamertemplate{background canvas}[vertical shading][
+        \naive@setbeamertemplate@backgroundcanvas@verticalshading[
           top=\naive@colorscheme@top,
           bottom=\naive@colorscheme@bottom,
           midpoint=\naive@colorscheme@midpoint,
@@ -536,7 +564,7 @@
           \naive@colorscheme@middle!50!\naive@colorscheme@bottom,%
           \naive@colorscheme@bottom}%
 
-        \setbeamertemplate{background canvas}[vertical shading][
+        \naive@setbeamertemplate@backgroundcanvas@verticalshading[
           top=\naive@colorscheme@top,
           middle=\naive@colorscheme@middle,
           bottom=\naive@colorscheme@bottom,
